@@ -13,7 +13,7 @@
  */
 'use strict';
 
-const CACHE_NAME = 'cambridge-trainer-v1';
+const CACHE_NAME = 'cambridge-trainer-v2';
 
 const CHART_CDN_URL = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js';
 

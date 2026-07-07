@@ -7,8 +7,12 @@
   <meta name="description" content="AI-powered practice for every Cambridge English exam from A1 to C2: Reading & Use of English, Writing, Listening and Speaking tips, with mock tests and progress tracking — pitched at the level you choose.">
   <meta name="theme-color" content="#0e7c6b">
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <!-- ?v=2 busts the aggressive browser/service-worker favicon cache after the
+       icon was redesigned (ascending bars, replacing the old "C1" mark). -->
+  <link rel="icon" href="icons/icon.svg?v=2" type="image/svg+xml">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=2">
+  <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png?v=2">
+  <link rel="apple-touch-icon" href="icons/icon-192.png?v=2">
   <!-- "Examiner's Ink" type: Fraunces (display) / Literata (exam text) /
        Schibsted Grotesk (UI) / Spline Sans Mono (timers, Q-numbers) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">

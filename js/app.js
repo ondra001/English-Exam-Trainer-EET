@@ -8,6 +8,38 @@
 
   /* ---------- theme ---------- */
 
+  // Small hex-blend helpers so the whole UI can take on the active level's
+  // accent colour. We resolve to concrete hex (not CSS color-mix) so the
+  // dashboard's <canvas> chart, which reads --accent, still gets a valid colour.
+  function hexToRgb(h) {
+    let s = String(h).replace('#', '');
+    if (s.length === 3) s = s.split('').map((c) => c + c).join('');
+    return [parseInt(s.slice(0, 2), 16), parseInt(s.slice(2, 4), 16), parseInt(s.slice(4, 6), 16)];
+  }
+  function mix(a, b, t) {
+    const A = hexToRgb(a);
+    const B = hexToRgb(b);
+    const c = A.map((x, i) => Math.round(x + (B[i] - x) * t));
+    return '#' + c.map((x) => Math.max(0, Math.min(255, x)).toString(16).padStart(2, '0')).join('');
+  }
+
+  // Recolour the app's accent trio from the active level, per theme.
+  function applyLevelAccent(theme) {
+    const L = CAE.levels && CAE.levels.active && CAE.levels.active();
+    const base = L && L.accent;
+    if (!base) return;
+    const root = document.documentElement.style;
+    if (theme === 'dark') {
+      root.setProperty('--accent', mix(base, '#ffffff', 0.42));
+      root.setProperty('--accent-strong', mix(base, '#ffffff', 0.60));
+      root.setProperty('--accent-soft', mix('#232a44', base, 0.14));
+    } else {
+      root.setProperty('--accent', base);
+      root.setProperty('--accent-strong', mix(base, '#000000', 0.28));
+      root.setProperty('--accent-soft', mix(base, '#ffffff', 0.88));
+    }
+  }
+
   const media = window.matchMedia('(prefers-color-scheme: dark)');
 
   function resolvedTheme() {
@@ -25,6 +57,7 @@
     clearTimeout(themeFadeTimer);
     themeFadeTimer = setTimeout(() => document.documentElement.classList.remove('theme-fade'), 400);
     document.documentElement.dataset.theme = t;
+    applyLevelAccent(t);
     const metaTag = document.querySelector('meta[name="theme-color"]');
     if (metaTag) metaTag.content = t === 'dark' ? '#10131d' : '#f7f3ea';
     if (CAE.dashboard && CAE.dashboard.refreshTheme) CAE.dashboard.refreshTheme();
@@ -428,6 +461,7 @@
     const apply = (close) => {
       CAE.storage.saveSettings({ level: chosen });
       updateLevelChip();
+      applyTheme();
       const L = CAE.levels.get(chosen);
       ui.toast('Level set to ' + L.exam, 'success');
       close();
@@ -550,6 +584,7 @@
     const levelSel = el('select', { class: 'select', on: { change: () => {
       save({ level: levelSel.value });
       updateLevelChip();
+      applyTheme();
       const L = CAE.levels.get(levelSel.value);
       ui.toast('Level set to ' + L.exam, 'success');
     } } });
