@@ -26,7 +26,7 @@
         ['Discourse Management', 'developed, relevant answers: two or three connected sentences, not one word and not a ramble.'],
         ['Pronunciation', 'clear, easy-to-follow speech with natural stress and intonation from your very first answer.'],
         ['Interactive Communication', 'you listen to the actual question and answer it directly, developing your reply without needing prompts.'],
-        ['Global Achievement', 'you sound relaxed and natural talking about familiar topics at C1 level.'],
+        ['Global Achievement', 'you sound relaxed and natural talking about familiar topics at your level.'],
       ],
       tips: [
         'Extend every answer: statement → reason → example. Aim for two or three sentences — never a single word.',
@@ -164,7 +164,7 @@
         ['Discourse Management', 'fully developed arguments — position, justification, example, concession — organised on the fly.'],
         ['Pronunciation', 'clarity sustained through longer and more complex turns.'],
         ['Interactive Communication', 'taking natural opportunities to respond to your partner’s ideas, not only the examiner’s questions.'],
-        ['Global Achievement', 'the part that most separates B2 from C1/C2: thinking aloud about abstract issues with confidence.'],
+        ['Global Achievement', 'the part that most stretches you: thinking aloud about abstract issues with confidence.'],
       ],
       tips: [
         'Every answer = opinion + justification + example. “It depends” on its own is a wasted turn.',

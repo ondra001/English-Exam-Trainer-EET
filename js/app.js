@@ -391,7 +391,10 @@
         class: 'level-card' + (L.id === chosen ? ' selected' : ''),
         type: 'button', role: 'radio',
         style: { '--lvl': L.accent || '#0e7c6b' },
-        attr: { 'aria-checked': String(L.id === chosen) },
+        attr: {
+          'aria-checked': String(L.id === chosen),
+          title: L.structureNote || (L.examAccurate ? 'Exam-accurate paper structure.' : ''),
+        },
         on: { click: () => {
           chosen = L.id;
           for (const [id, c] of Object.entries(cards)) {
@@ -404,13 +407,6 @@
       el('span', { class: 'level-body' },
         el('strong', { class: 'level-name', text: L.exam }),
         el('span', { class: 'muted small level-tag', text: L.tagline }),
-        L.examAccurate
-          ? el('span', { class: 'badge good level-badge', text: '✓ Exam-accurate format' })
-          : el('span', {
-            class: 'chip chip-meta level-badge',
-            text: L.structureNote ? 'Partly exam-accurate' : 'Level-adapted practice',
-            attr: L.structureNote ? { title: L.structureNote } : {},
-          }),
       ),
       el('span', { class: 'level-check', attr: { 'aria-hidden': 'true' }, text: '✓' }),
       );
@@ -476,9 +472,9 @@
     const content = el('div', null,
       el('div', { class: 'welcome-hero' },
         el('div', { class: 'welcome-icon wm-mark', text: '◆' }),
-        el('span', { class: 'overline wm-overline', text: 'Cambridge ' + L.exam }),
+        el('span', { class: 'overline wm-overline', text: L.exam }),
         el('h2', { text: 'Welcome to Cambridge Trainer' }),
-        el('p', { class: 'muted wm-lede', text: 'Fresh, AI-generated practice for every part of the ' + L.exam + ' exam — pitched at your level, with a pass at ' + sc.pass + ' on the Cambridge scale.' }),
+        el('p', { class: 'muted wm-lede', text: 'Fresh, AI-generated practice for every part of the exam — Reading, Writing, Listening and Speaking — all pitched at ' + L.cefr + ' level.' }),
         el('button', { class: 'text-link', type: 'button', on: { click: () => openLevelPicker({}) } }, 'Change level (' + L.cefr + ')'),
       ),
       el('div', { class: 'field' },

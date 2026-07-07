@@ -773,7 +773,7 @@
               CAE.ui.toast('Data imported', 'success');
               if (lastHost) render(lastHost);
             } else {
-              CAE.ui.toast((res && res.error) || 'That file isn’t a valid CAE Ace export.', 'error');
+              CAE.ui.toast((res && res.error) || 'That file isn’t a valid Cambridge Trainer export.', 'error');
             }
           }).catch(() => {
             CAE.ui.toast('Couldn’t read that file.', 'error');
@@ -787,7 +787,7 @@
       title: 'Download your attempts, mock results, drafts and settings as a JSON file',
       on: {
         click: () => {
-          U.download('cae-ace-progress.json', CAE.storage.exportData());
+          U.download('cambridge-trainer-progress.json', CAE.storage.exportData());
           CAE.ui.toast('Data exported', 'success');
         },
       },
@@ -795,7 +795,7 @@
 
     const importBtn = el('button', {
       class: 'text-link no-arrow', type: 'button',
-      title: 'Restore a CAE Ace export file',
+      title: 'Restore a Cambridge Trainer export file',
       on: { click: () => fileInput.click() },
     }, 'Import data');
 
@@ -804,7 +804,7 @@
       on: {
         click: async () => {
           const first = await CAE.ui.confirm(
-            'Delete ALL your CAE Ace data — attempts, mock results, drafts and settings?',
+            'Delete ALL your Cambridge Trainer data for every level — attempts, mock results, drafts and settings?',
             { danger: true });
           if (!first) return;
           const second = await CAE.ui.confirm(

@@ -8,6 +8,9 @@
 
   const { el } = CAE.util;
 
+  const lvl = () => (CAE.levels && CAE.levels.active && CAE.levels.active())
+    || { cefr: 'C1', below: 'B2', aspire: 'C2' };
+
   // Days until the next review, indexed by Leitner box (1–5).
   const BOX_DAYS = { 1: 1, 2: 2, 3: 4, 4: 7, 5: 14 };
   const DAY = 24 * 60 * 60 * 1000;
@@ -171,7 +174,7 @@
 
     host.append(
       el('h1', { class: 'ink-stroke', text: 'Vocabulary builder' }),
-      el('p', { class: 'muted', text: 'The hard words that separate B2 from C1 — collect them, then let spaced-repetition flashcards make them permanent.' }),
+      el('p', { class: 'muted', text: 'The vocabulary that lifts your English to ' + lvl().cefr + ' level — collect it, then let spaced-repetition flashcards make it permanent.' }),
     );
 
     // One serif count line under the deck heading replaces the old stat tiles.
@@ -235,7 +238,7 @@
       el('div', { class: 'card' },
         el('div', { class: 'row' }, studyBtn, genBtn),
         el('div', { class: 'row', style: { marginTop: '12px' } }, addInput, addBtn),
-        el('p', { class: 'muted small', text: 'Fresh words are AI-generated at real C1/C2 level and never repeat what is already in your deck. Reviews come back on a spaced schedule: 1, 2, 4, 7, then 14 days.', style: { margin: '10px 0 0' } }),
+        el('p', { class: 'muted small', text: 'Fresh words are AI-generated at ' + lvl().cefr + ' level and never repeat what is already in your deck. Reviews come back on a spaced schedule: 1, 2, 4, 7, then 14 days.', style: { margin: '10px 0 0' } }),
       ),
       content);
 
@@ -468,8 +471,11 @@
   }
 
   function todayIndex(len) {
-    const days = Math.floor(Date.now() / 86400000);
-    return days % (len || 1);
+    // Local day number, so the word rotates at the learner's OWN midnight
+    // (not UTC midnight — which would lag by the timezone offset).
+    const d = new Date();
+    const localDays = Math.floor((d.getTime() - d.getTimezoneOffset() * 60000) / 86400000);
+    return localDays % (len || 1);
   }
 
   /* Dashboard card: one hard word per day, rate it, hard ones join the deck. */
