@@ -55,10 +55,18 @@
     return [[0, scale.min], [3, scale.pass], [4.5, scale.high], [5, scale.max]];
   }
 
+  // A harmonious A1→C2 accent ramp (teal → indigo → magenta) so each level has
+  // its own identity in the picker and header without clashing with the brand.
+  const ACCENTS = {
+    a1: '#2ca58d', a2: '#2b8fa6', b1: '#3f74d0',
+    b2: '#5a57d6', c1: '#8248c9', c2: '#b03f8f',
+  };
+
   function makeLevel(def) {
     const scale = def.scale;
     const level = Object.assign({
       examAccurate: false,
+      accent: def.accent || ACCENTS[def.id] || '#0e7c6b',
       grades: def.grades || gradesFor(scale, def.below, def.aspire),
       pctAnchors: def.pctAnchors || pctAnchorsFor(scale),
       bandAnchors: def.bandAnchors || bandAnchorsFor(scale),

@@ -372,6 +372,7 @@
     if (!btn || !CAE.levels) return;
     const L = CAE.levels.active();
     btn.textContent = L.cefr;
+    if (L.accent) btn.style.setProperty('--lvl', L.accent);
     btn.title = 'Your level: ' + L.exam + ' — tap to change';
     btn.setAttribute('aria-label', 'Your level: ' + L.exam + '. Change your level.');
   }
@@ -389,6 +390,7 @@
       const card = el('button', {
         class: 'level-card' + (L.id === chosen ? ' selected' : ''),
         type: 'button', role: 'radio',
+        style: { '--lvl': L.accent || '#0e7c6b' },
         attr: { 'aria-checked': String(L.id === chosen) },
         on: { click: () => {
           chosen = L.id;
@@ -410,6 +412,7 @@
             attr: L.structureNote ? { title: L.structureNote } : {},
           }),
       ),
+      el('span', { class: 'level-check', attr: { 'aria-hidden': 'true' }, text: '✓' }),
       );
       cards[L.id] = card;
       grid.append(card);

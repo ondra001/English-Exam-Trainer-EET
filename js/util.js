@@ -59,7 +59,11 @@
             }
             break;
           case 'style':
-            for (const k of Object.keys(v)) node.style[k] = v[k];
+            for (const k of Object.keys(v)) {
+              // CSS custom properties (--foo) must go through setProperty.
+              if (k.charAt(0) === '-' && k.charAt(1) === '-') node.style.setProperty(k, v[k]);
+              else node.style[k] = v[k];
+            }
             break;
           case 'type':
           case 'placeholder':

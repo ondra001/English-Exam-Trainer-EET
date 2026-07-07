@@ -3299,62 +3299,104 @@ main.container { flex: 1 0 auto; width: 100%; }
 
 /* ---------- CEFR level chip + picker (Cambridge Trainer) ---------- */
 .level-chip {
+  --lvl: var(--accent, #2b46d4);
   font-family: var(--mono, monospace);
   font-weight: 700;
   font-size: .82rem;
   letter-spacing: .04em;
-  min-width: 2.5em;
+  min-width: 2.6em;
   height: 2.2em;
-  padding: 0 .6em;
+  padding: 0 .55em 0 .5em;
   border-radius: 999px;
-  border: 1px solid var(--line, #d9d2c0);
-  background: var(--surface, #fff);
-  color: var(--ink, #1a1a1a);
+  border: 1px solid color-mix(in srgb, var(--lvl) 40%, var(--line, #d9d2c0));
+  background: color-mix(in srgb, var(--lvl) 12%, var(--surface, #fff));
+  color: var(--lvl);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background .15s, border-color .15s, transform .1s;
+  gap: .3em;
+  transition: background .15s, border-color .15s, transform .1s, box-shadow .15s;
 }
-.level-chip:hover { border-color: var(--accent, #2b46d4); color: var(--accent, #2b46d4); }
-.level-chip:active { transform: translateY(1px); }
+.level-chip::before {
+  content: "";
+  width: .5em; height: .5em; border-radius: 50%;
+  background: var(--lvl);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--lvl) 25%, transparent);
+}
+.level-chip:hover { box-shadow: 0 4px 12px -6px var(--lvl); transform: translateY(-1px); }
+.level-chip:active { transform: translateY(0); }
 
-.level-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin-top: 8px; }
+.level-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin-top: 10px; }
 @media (min-width: 520px) { .level-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
 
 .level-card {
+  --lvl: var(--accent, #2b46d4);
+  position: relative;
+  overflow: hidden;
   display: flex;
-  gap: 12px;
+  gap: 13px;
   align-items: flex-start;
   text-align: left;
-  padding: 14px;
-  border-radius: 14px;
+  padding: 15px 15px 15px 20px;
+  border-radius: 16px;
   border: 1px solid var(--line, #d9d2c0);
   background: var(--surface, #fff);
   color: var(--ink, #1a1a1a);
   cursor: pointer;
-  transition: border-color .15s, box-shadow .15s, transform .1s;
+  transition: border-color .18s ease, box-shadow .18s ease, transform .12s ease;
 }
-.level-card:hover { border-color: var(--accent, #2b46d4); }
-.level-card:active { transform: translateY(1px); }
+/* accent spine down the left edge */
+.level-card::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 6px;
+  background: var(--lvl);
+  opacity: .9;
+}
+.level-card:hover {
+  border-color: color-mix(in srgb, var(--lvl) 55%, transparent);
+  box-shadow: 0 14px 30px -16px var(--lvl);
+  transform: translateY(-3px);
+}
+.level-card:active { transform: translateY(-1px); }
 .level-card.selected {
-  border-color: var(--accent, #2b46d4);
-  box-shadow: inset 0 0 0 2px var(--accent, #2b46d4);
+  border-color: var(--lvl);
+  box-shadow: inset 0 0 0 2px var(--lvl), 0 12px 26px -16px var(--lvl);
+  background: color-mix(in srgb, var(--lvl) 5%, var(--surface, #fff));
 }
 .level-cefr {
+  flex: none;
   font-family: var(--display, serif);
   font-weight: 600;
-  font-size: 1.5rem;
+  font-size: 1.55rem;
   line-height: 1;
-  min-width: 2.1em;
+  min-width: 2.15em;
   text-align: center;
-  padding: .38em 0;
-  border-radius: 10px;
-  background: var(--paper, #f2eee3);
-  background: color-mix(in srgb, var(--accent, #2b46d4) 12%, transparent);
-  color: var(--accent, #2b46d4);
+  padding: .42em 0;
+  border-radius: 12px;
+  color: #fff;
+  background: linear-gradient(150deg,
+    color-mix(in srgb, var(--lvl) 82%, white) 0%,
+    var(--lvl) 100%);
+  box-shadow: 0 6px 14px -8px var(--lvl);
 }
-.level-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.level-name { font-size: .98rem; }
-.level-tag { line-height: 1.35; }
-.level-badge { align-self: flex-start; margin-top: 2px; white-space: normal; max-width: 100%; height: auto; }
+.level-body { display: flex; flex-direction: column; gap: 5px; min-width: 0; padding-right: 14px; }
+.level-name { font-size: 1rem; letter-spacing: -.01em; }
+.level-tag { line-height: 1.4; }
+.level-badge { align-self: flex-start; margin-top: 3px; white-space: normal; max-width: 100%; height: auto; }
+/* selected tick, top-right */
+.level-check {
+  position: absolute;
+  top: 12px; right: 12px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; line-height: 1;
+  color: #fff;
+  background: var(--lvl);
+  transform: scale(0);
+  transition: transform .18s cubic-bezier(.34, 1.56, .64, 1);
+}
+.level-card.selected .level-check { transform: scale(1); }
