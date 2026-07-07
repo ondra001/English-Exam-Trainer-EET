@@ -1,0 +1,16 @@
+{
+  "name": "cae-ace-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Secure Anthropic proxy + static host for the CAE Ace exam preparation app. Keeps the API key server-side.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

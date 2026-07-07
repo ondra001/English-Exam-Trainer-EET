@@ -1,0 +1,28 @@
+# Dependencies (backend proxy is not used for the static "bring-your-own-key" deploy)
+node_modules/
+backend/node_modules/
+
+# Secrets — never commit an API key
+.env
+.env.*
+*.key
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Local Claude Code settings — not part of the app
+.claude/
+
+# Internal build spec — not needed to run or deploy the app
+Build Prompt for Fable 5.docx
+
+# Stray PNG accidentally emitted by the icon-generation script
+System.Drawing.Drawing2D.GraphicsPath

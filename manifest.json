@@ -1,0 +1,39 @@
+{
+  "name": "Cambridge Trainer — A1 to C2 English Practice",
+  "short_name": "Cambridge Trainer",
+  "description": "Prepare for every Cambridge English exam from A1 to C2 with fresh, AI-generated practice pitched at your level: Reading & Use of English, Listening (spoken aloud), Writing with examiner-style feedback, Speaking tips, full mock tests and progress tracking on the Cambridge scale.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6f5f1",
+  "theme_color": "#0e7c6b",
+  "lang": "en",
+  "categories": ["education"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

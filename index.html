@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Cambridge Trainer — A1 to C2 English Practice</title>
+  <meta name="description" content="AI-powered practice for every Cambridge English exam from A1 to C2: Reading & Use of English, Writing, Listening and Speaking tips, with mock tests and progress tracking — pitched at the level you choose.">
+  <meta name="theme-color" content="#0e7c6b">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <!-- "Examiner's Ink" type: Fraunces (display) / Literata (exam text) /
+       Schibsted Grotesk (UI) / Spline Sans Mono (timers, Q-numbers) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,480;0,9..144,600;1,9..144,480&amp;family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;1,7..72,400&amp;family=Schibsted+Grotesk:wght@400;500;700&amp;family=Spline+Sans+Mono&amp;display=swap">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="container">
+      <div class="brand"><span class="brand-mark">◆</span><span class="brand-text">Cambridge Trainer</span></div>
+      <nav class="nav" aria-label="Main">
+        <button class="nav-btn" data-nav="dashboard" data-short="Home">Dashboard</button>
+        <button class="nav-btn" data-nav="parts" data-short="Practice">Practice</button>
+        <button class="nav-btn" data-nav="mock" data-short="Mock">Mock test</button>
+        <button class="nav-btn" data-nav="review" data-short="Review">Review</button>
+        <button class="nav-btn" data-nav="vocab" data-short="Vocab">Vocabulary</button>
+      </nav>
+      <div class="header-actions">
+        <button id="level-btn" class="level-chip" aria-label="Change your level" title="Change your level">C1</button>
+        <button id="theme-toggle" class="icon-btn" aria-label="Toggle dark mode" title="Toggle dark mode">◐</button>
+        <button id="settings-btn" class="icon-btn" aria-label="Settings" title="Settings">⚙</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section id="view-dashboard" class="view" aria-label="Dashboard"></section>
+    <section id="view-parts" class="view" aria-label="Practice parts"></section>
+    <section id="view-exercise" class="view" aria-label="Exercise"></section>
+    <section id="view-mock" class="view" aria-label="Mock test"></section>
+    <section id="view-review" class="view" aria-label="Review list"></section>
+    <section id="view-vocab" class="view" aria-label="Vocabulary builder"></section>
+  </main>
+
+  <footer class="colophon" aria-label="About CAE Ace">
+    <div class="container">
+      <div class="colophon-rule" aria-hidden="true"><span class="colophon-mark">◆</span></div>
+      <p class="colophon-line" id="colophon-line">CAMBRIDGE TRAINER · A1–C2 · CAMBRIDGE ENGLISH SCALE</p>
+      <p class="colophon-sign">Set, marked and stored entirely in this browser.</p>
+      <p class="colophon-sign colophon-by">by Ondřej Kopl</p>
+      <div class="colophon-actions" id="colophon-actions"></div>
+    </div>
+  </footer>
+
+  <div id="toast-host" role="status" aria-live="polite"></div>
+
+  <noscript>
+    <div style="max-width:560px;margin:60px auto;padding:24px;text-align:center;font-family:sans-serif">
+      <h1>CAE Ace needs JavaScript</h1>
+      <p>Please enable JavaScript to use this app — everything runs locally in your browser.</p>
+    </div>
+  </noscript>
+
+  <script defer src="js/config.js"></script>
+  <script defer src="js/levels.js"></script>
+  <script defer src="js/util.js"></script>
+  <script defer src="js/icons.js"></script>
+  <script defer src="js/storage.js"></script>
+  <script defer src="js/prompts.js"></script>
+  <script defer src="js/mock.js"></script>
+  <script defer src="js/api.js"></script>
+  <script defer src="js/marking.js"></script>
+  <script defer src="js/timer.js"></script>
+  <script defer src="js/ui.js"></script>
+  <script defer src="js/parts/uoe.js"></script>
+  <script defer src="js/parts/reading.js"></script>
+  <script defer src="js/parts/listening.js"></script>
+  <script defer src="js/parts/writing.js"></script>
+  <script defer src="js/parts/speaking.js"></script>
+  <script defer src="js/mocktest.js"></script>
+  <script defer src="js/vocab.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script defer src="js/dashboard.js"></script>
+  <script defer src="js/app.js"></script>
+</body>
+</html>
