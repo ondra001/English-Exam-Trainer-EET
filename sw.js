@@ -13,7 +13,7 @@
  */
 'use strict';
 
-const CACHE_NAME = 'cambridge-trainer-v2';
+const CACHE_NAME = 'english-exam-trainer-v1';
 
 const CHART_CDN_URL = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js';
 
@@ -66,7 +66,7 @@ self.addEventListener('activate', (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => (key.startsWith('cae-ace-') || key.startsWith('cambridge-trainer-')) && key !== CACHE_NAME)
+            .filter((key) => (key.startsWith('cae-ace-') || key.startsWith('cambridge-trainer-') || key.startsWith('english-exam-trainer-')) && key !== CACHE_NAME)
             .map((key) => caches.delete(key))
         )
       )

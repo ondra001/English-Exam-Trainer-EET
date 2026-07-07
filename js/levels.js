@@ -1,4 +1,4 @@
-/* Cambridge Trainer — CEFR level packs (CAE.levels).
+/* English Exam Trainer — CEFR level packs (CAE.levels).
  *
  * The app was originally hard-wired to Cambridge C1 Advanced (CAE). This module
  * turns "the exam level" into data: each pack carries the exam name, the

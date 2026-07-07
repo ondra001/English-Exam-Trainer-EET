@@ -1,6 +1,6 @@
 {
-  "name": "Cambridge Trainer — A1 to C2 English Practice",
-  "short_name": "Cambridge Trainer",
+  "name": "English Exam Trainer — A1 to C2 Practice",
+  "short_name": "English Exam Trainer",
   "description": "Prepare for every Cambridge English exam from A1 to C2 with fresh, AI-generated practice pitched at your level: Reading & Use of English, Listening (spoken aloud), Writing with examiner-style feedback, Speaking tips, full mock tests and progress tracking on the Cambridge scale.",
   "start_url": "./index.html",
   "scope": "./",

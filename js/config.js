@@ -64,7 +64,7 @@
     SCALE_MIN: 142,
     SCALE_MAX: 210,
 
-    APP_NAME: 'Cambridge Trainer',
+    APP_NAME: 'English Exam Trainer',
     VERSION: '1.1.0',
   };
 })();

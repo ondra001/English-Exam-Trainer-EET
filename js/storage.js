@@ -205,7 +205,7 @@
       return { ok: false, error: 'That file is not valid JSON.' };
     }
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-      return { ok: false, error: 'That file does not look like a Cambridge Trainer export.' };
+      return { ok: false, error: 'That file does not look like an English Exam Trainer export.' };
     }
     const data = (parsed.data && typeof parsed.data === 'object' && !Array.isArray(parsed.data))
       ? parsed.data
@@ -214,7 +214,7 @@
     const arrayKeys = Object.keys(data).filter((k) => ARRAY_RE.test(k));
     const hasSettings = data.settings !== undefined;
     if (!arrayKeys.length && !hasSettings) {
-      return { ok: false, error: 'No Cambridge Trainer data found in that file.' };
+      return { ok: false, error: 'No English Exam Trainer data found in that file.' };
     }
     for (const k of arrayKeys) {
       if (!Array.isArray(data[k])) {

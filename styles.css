@@ -3297,7 +3297,7 @@ main.container { flex: 1 0 auto; width: 100%; }
 /* colophon credit */
 .colophon-by { margin-top: 2px; font-style: italic; color: var(--muted); }
 
-/* ---------- CEFR level chip + picker (Cambridge Trainer) ---------- */
+/* ---------- CEFR level chip + picker (English Exam Trainer) ---------- */
 .level-chip {
   --lvl: var(--accent, #2b46d4);
   font-family: var(--mono, monospace);

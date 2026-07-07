@@ -507,7 +507,7 @@
       el('div', { class: 'welcome-hero' },
         el('div', { class: 'welcome-icon wm-mark', text: '◆' }),
         el('span', { class: 'overline wm-overline', text: L.exam }),
-        el('h2', { text: 'Welcome to Cambridge Trainer' }),
+        el('h2', { text: 'Welcome to English Exam Trainer' }),
         el('p', { class: 'muted wm-lede', text: 'Fresh, AI-generated practice for every part of the exam — Reading, Writing, Listening and Speaking — all pitched at ' + L.cefr + ' level.' }),
         el('button', { class: 'text-link', type: 'button', on: { click: () => openLevelPicker({}) } }, 'Change level (' + L.cefr + ')'),
       ),
