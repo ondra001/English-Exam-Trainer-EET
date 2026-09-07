@@ -305,6 +305,76 @@
     );
   }
 
+  /* ---------- Gemini model picker (settings) ----------
+   * Normally nobody needs to touch this: the app discovers which models the
+   * pasted key can actually call and uses the newest one (js/models.js).
+   * It is here because model availability differs from key to key, so when
+   * something does go wrong "Refresh model list" — and, failing that, picking
+   * a model by hand — is the fix, without waiting for an app update. */
+
+  function geminiModelField(getKey) {
+    const M = CAE.models;
+    const label = el('label', { class: 'label', text: 'Gemini model' });
+    const sel = el('select', { class: 'select', ariaLabel: 'Gemini model' });
+    const note = el('p', { class: 'muted small', style: { margin: '6px 0 0' } });
+
+    const AUTO_TEXT = 'Automatic — newest model your key supports';
+
+    const fill = () => {
+      const pin = M.pinned();
+      const ids = M.cachedIds();
+      // A pin for a model that has since vanished from the catalogue must
+      // still show up, or the dropdown would silently misreport the setting.
+      if (pin && !ids.includes(pin)) ids.unshift(pin);
+      sel.replaceChildren(el('option', { value: '', text: AUTO_TEXT }));
+      for (const id of ids) sel.append(el('option', { value: id, text: id }));
+      sel.value = pin;
+      if (sel.value !== pin) sel.value = '';
+
+      const inUse = M.working();
+      note.textContent = ids.length
+        ? (pin ? 'Pinned. If this model ever stops working the app still falls back to another one.'
+          : 'Chosen for you from the ' + ids.length + ' models your key can use'
+            + (inUse ? ' — currently using ' + inUse + '.' : '.'))
+        : 'No list yet — press Refresh, or just start practising and the app will work it out.';
+    };
+
+    const refresh = el('button', { class: 'btn btn-sm', type: 'button', on: { click: async () => {
+      const key = String(getKey() || '').trim();
+      if (!key) { ui.toast('Paste your Gemini key first.', 'error'); return; }
+      refresh.disabled = true;
+      const was = refresh.textContent;
+      refresh.textContent = 'Checking…';
+      try {
+        const ids = await CAE.api.discoverGeminiModels(key);
+        fill();
+        ui.toast(ids.length
+          ? 'Found ' + ids.length + ' usable models — newest is ' + ids[0] + '.'
+          : 'Could not read the model list — check the key and your connection.',
+        ids.length ? 'success' : 'error');
+      } finally {
+        refresh.disabled = false;
+        refresh.textContent = was;
+      }
+    } } }, 'Refresh model list');
+
+    sel.addEventListener('change', () => {
+      CAE.storage.saveSettings({ geminiModel: sel.value });
+      // Going back to Automatic must re-derive from the ranking rather than
+      // quietly carry on with whatever was pinned.
+      if (!sel.value) M.forgetWorking();
+      fill();
+      ui.toast(sel.value ? 'Using ' + sel.value : 'Back to automatic model choice', 'success');
+    });
+
+    fill();
+    return el('div', { class: 'field' },
+      label, sel,
+      el('div', { class: 'row', style: { marginTop: '6px' } }, refresh),
+      note,
+    );
+  }
+
   /* ---------- AI engine picker (welcome + settings) ---------- */
 
   const PROVIDERS = [
@@ -535,6 +605,9 @@
           const patch = { provider, baselineScore: baseline.read(), targetScore: goal.read() };
           patch[provider === 'gemini' ? 'geminiKey' : 'apiKey'] = v;
           CAE.storage.saveSettings(patch);
+          // Warm the model list in the background so this key's very first
+          // practice set goes straight to a model it can actually use.
+          if (provider === 'gemini') CAE.api.discoverGeminiModels(v).catch(() => {});
           ui.toast('Key saved — you\'re ready to practise!', 'success');
           close();
         } },
@@ -562,20 +635,27 @@
       sProvider = p;
       const storeKey = p === 'gemini' ? 'geminiKey' : 'apiKey';
       const input = sKeys[p].input;
-      sKeyField.replaceChildren(
+      sKeyField.replaceChildren(...[
         el('label', { class: 'label', text: p === 'gemini' ? 'Google Gemini API key (free tier)' : 'Anthropic API key' }),
         sKeys[p].row,
         el('div', { class: 'row', style: { marginTop: '6px' } },
           el('button', { class: 'btn btn-sm', on: { click: () => {
-            const patch = {}; patch[storeKey] = input.value.trim(); save(patch);
-            ui.toast(input.value.trim() ? 'Key saved' : 'Key cleared', 'success');
+            const v = input.value.trim();
+            const patch = {}; patch[storeKey] = v; save(patch);
+            ui.toast(v ? 'Key saved' : 'Key cleared', 'success');
+            // Learn this key's model list now, so the first practice set does
+            // not have to discover it the slow way. Failure is harmless.
+            if (p === 'gemini' && v) {
+              CAE.api.discoverGeminiModels(v).then((ids) => { if (ids.length) syncEngine(p); }).catch(() => {});
+            }
           } } }, 'Save key'),
           el('button', { class: 'btn btn-danger btn-sm', on: { click: () => {
             input.value = ''; const patch = {}; patch[storeKey] = ''; save(patch); ui.toast('Key cleared');
           } } }, 'Clear key'),
         ),
         el('p', { class: 'muted small', text: 'Your key is stored only in this browser.', style: { margin: '6px 0 0' } }),
-      );
+        p === 'gemini' ? geminiModelField(() => input.value) : null,
+      ].filter(Boolean));
       sHelp.replaceChildren(howToGetKey(p));
     };
     const enginePicker = providerPicker(sProvider, (p) => { save({ provider: p }); syncEngine(p); });

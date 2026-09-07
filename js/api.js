@@ -35,6 +35,8 @@
       super(message);
       this.name = 'ApiError';
       this.kind = kind || 'server'; // 'auth'|'rate'|'overloaded'|'network'|'badjson'|'server'
+      this.status = 0;   // HTTP status, when the failure came from a response
+      this.detail = '';  // provider's own error message, unwrapped
     }
   }
 
@@ -48,6 +50,8 @@
     network: 'Could not reach the AI service — check your internet connection and try again.',
     badjson: 'The model returned something that could not be read as a valid task — please try again.',
     server: 'The AI service returned an unexpected error — please try again.',
+    noModel: 'None of the Gemini models your key can use would answer. Open Settings → AI engine and press “Refresh model list”, or pick a model manually.',
+    geminiRate: 'Your Gemini free-tier quota is used up on every model available to this key — wait a while, or add billing in Google AI Studio.',
   };
 
   const JSON_NUDGE = '\n\nIMPORTANT: Your previous output could not be used. Return ONLY valid JSON exactly matching the schema — no preamble, no commentary, no markdown, no backticks.';
@@ -90,10 +94,21 @@
     return activeKey().length > 0;
   }
 
-  /* The ONE place in the entire app that touches the network.
+  /* Build an ApiError that still carries the raw HTTP status and the
+   * provider's own wording, so callers (js/models.js) can tell "this model is
+   * not available to you" apart from "your key is wrong" or "we are down". */
+  function fail(message, kind, status, detail) {
+    const e = new ApiError(message, kind);
+    e.status = status || 0;
+    e.detail = detail || '';
+    return e;
+  }
+
+  /* The ONE place in the entire app that sends a prompt over the network.
    * Retries exactly once (after 2s) on 429 / 529 / "overloaded", then throws
    * a friendly ApiError. Returns the parsed JSON body of a 2xx response. */
-  async function request(url, headers, body, authMessage) {
+  async function request(url, headers, body, authMessage, opts) {
+    const softAuth403 = !!(opts && opts.softAuth403);
     let retried = false;
     for (;;) {
       let res;
@@ -121,9 +136,15 @@
       const errType = data && data.error && data.error.type ? String(data.error.type) : '';
       const errMsg = data && data.error && data.error.message ? String(data.error.message) : '';
 
-      if (status === 401 || status === 403 ||
+      // A 403 is ambiguous on Gemini — it covers both "bad key" and "this key
+      // may not use that model". Callers that can fall back to another model
+      // pass softAuth403 so only a key-blaming 403 counts as auth; everything
+      // else falls through for CAE.models to classify.
+      const blamesKey = /api[_ -]?key|unauthenticated|invalid authentication/i.test(errMsg + errType);
+      if (status === 401 ||
+          (status === 403 && (!softAuth403 || blamesKey || !errMsg)) ||
           (status === 400 && /api key not valid|api_key_invalid/i.test(errMsg + errType))) {
-        throw new ApiError(authMessage || MSG.auth, 'auth');
+        throw fail(authMessage || MSG.auth, 'auth', status, errMsg);
       }
       const isOverloaded = status === 529 || /overloaded/i.test(errType) || /overloaded/i.test(errMsg);
       const isRate = status === 429 && !isOverloaded;
@@ -132,16 +153,135 @@
         await delay(2000);
         continue;
       }
-      if (isRate) throw new ApiError(MSG.rate, 'rate');
-      if (isOverloaded) throw new ApiError(MSG.overloaded, 'overloaded');
-      throw new ApiError(
+      if (isRate) throw fail(MSG.rate, 'rate', status, errMsg);
+      if (isOverloaded) throw fail(MSG.overloaded, 'overloaded', status, errMsg);
+      throw fail(
         errMsg ? 'The AI service returned an error: ' + errMsg : MSG.server,
-        'server');
+        'server', status, errMsg);
     }
   }
 
-  /* Raw prompt -> raw text. Direct (Anthropic) mode only; 'backend' mode uses
-   * typed requests via backendCall() and 'mock' mode never reaches the network. */
+  /* ---------- Google Gemini ---------- */
+
+  /* Ask the key which models it can actually call (ListModels). This is the
+   * cure for "it works for you but not for my friend": rather than assuming a
+   * model id, we read the catalogue this specific key is served, keep the ones
+   * that can generate text, and let CAE.models rank them. Cached for a day.
+   * Returns the ranked ids, or [] if the listing could not be fetched — a
+   * failure here is never fatal, the seed chain still applies. */
+  async function discoverGeminiModels(apiKey) {
+    const key = String(apiKey || activeKey() || '').trim();
+    if (!key) return [];
+    const url = CAE.config.GEMINI_API_BASE.replace(/\/+$/, '') + '?pageSize=200';
+    let res;
+    try {
+      res = await fetch(url, { headers: { 'x-goog-api-key': key } });
+    } catch (e) {
+      return [];
+    }
+    if (!res.ok) return [];
+    let data = null;
+    try {
+      data = await res.json();
+    } catch (e) {
+      return [];
+    }
+    const models = data && Array.isArray(data.models) ? data.models : [];
+    const ids = models
+      // Keep only models this key may drive through generateContent — the
+      // listing also carries embedding, TTS and streaming-only entries.
+      .filter((m) => !Array.isArray(m.supportedGenerationMethods) ||
+        m.supportedGenerationMethods.includes('generateContent'))
+      .map((m) => String(m.name || '').replace(/^models\//, ''))
+      .filter(Boolean);
+    if (!ids.length) return [];
+    return CAE.models.setCachedIds(ids);
+  }
+
+  /* One generateContent call against one specific model id. */
+  async function geminiGenerate(key, model, promptText, o, noThinking) {
+    const thinking = noThinking ? undefined : CAE.models.thinkingConfig(model);
+    const generationConfig = {
+      maxOutputTokens: o.maxTokens || CAE.config.DEFAULT_MAX_TOKENS,
+      responseMimeType: 'application/json',
+    };
+    // Thinking tokens are spent from the same output budget, so long JSON
+    // tasks get truncated unless we keep thinking low — see CAE.models.
+    if (thinking) generationConfig.thinkingConfig = thinking;
+
+    const gdata = await request(
+      CAE.config.GEMINI_API_BASE + model + ':generateContent',
+      { 'x-goog-api-key': key, 'content-type': 'application/json' },
+      { contents: [{ role: 'user', parts: [{ text: promptText }] }], generationConfig },
+      null,
+      { softAuth403: true });
+
+    const cand = gdata && Array.isArray(gdata.candidates) && gdata.candidates[0];
+    const gtext = cand && cand.content && Array.isArray(cand.content.parts)
+      ? cand.content.parts.map((pt) => pt.text || '').join('')
+      : '';
+    if (!gtext) throw new ApiError(MSG.badjson, 'badjson');
+    return gtext;
+  }
+
+  /* Walk the ranked candidate models until one answers.
+   *
+   * Two failures are worth stepping past rather than surfacing:
+   *   - "no such model / not available to you" — the key simply is not served
+   *     that id. First time it happens we also refresh the catalogue, because
+   *     our idea of what exists is evidently out of date.
+   *   - a rate limit — Gemini's free-tier quotas are counted PER MODEL, so the
+   *     next model down usually still has budget left today.
+   * The walk always terminates: CAE.models.candidates() drops ids already
+   * marked dead this session, so the list strictly shrinks. */
+  async function geminiCall(key, promptText, o) {
+    const M = CAE.models;
+    let list = M.candidates();
+    let refreshed = false;
+    let lastErr = null;
+
+    for (let i = 0; i < list.length; i++) {
+      const model = list[i];
+      try {
+        const text = await geminiGenerate(key, model, promptText, o);
+        M.noteWorking(model);
+        return text;
+      } catch (e) {
+        lastErr = e;
+
+        // The thinking parameters were rejected — retry this same model once
+        // without them before writing it off.
+        if (M.looksThinkingRejected(e)) {
+          try {
+            const text = await geminiGenerate(key, model, promptText, o, true);
+            M.noteWorking(model);
+            return text;
+          } catch (e2) {
+            lastErr = e2;
+            e = e2;
+          }
+        }
+
+        const unavailable = M.looksUnavailable(e);
+        if (!unavailable && e.kind !== 'rate') throw e;
+        if (unavailable) M.noteFailed(model);
+
+        // Our model list is demonstrably stale — re-read it once, then start
+        // the (now shorter, better-informed) walk again.
+        if (unavailable && !refreshed) {
+          refreshed = true;
+          const found = await discoverGeminiModels(key);
+          if (found.length) { list = M.candidates(); i = -1; }
+        }
+      }
+    }
+
+    if (lastErr && lastErr.kind === 'rate') throw fail(MSG.geminiRate, 'rate', 429, lastErr.detail);
+    throw fail(MSG.noModel, 'server', lastErr ? lastErr.status : 0, lastErr ? lastErr.detail : '');
+  }
+
+  /* Raw prompt -> raw text. Direct mode only; 'backend' mode uses typed
+   * requests via backendCall() and 'mock' mode never reaches the network. */
   async function callModel(promptText, opts) {
     const o = opts || {};
     const mode = CAE.config.mode();
@@ -155,28 +295,7 @@
     const key = activeKey();
     if (!key) throw new ApiError(activeProvider() === 'gemini' ? MSG.noGeminiKey : MSG.noKey, 'auth');
 
-    if (activeProvider() === 'gemini') {
-      // Google Gemini free tier — same prompt, different wire format.
-      const gdata = await request(
-        CAE.config.GEMINI_API_BASE + CAE.config.GEMINI_MODEL + ':generateContent',
-        { 'x-goog-api-key': key, 'content-type': 'application/json' },
-        {
-          contents: [{ role: 'user', parts: [{ text: promptText }] }],
-          generationConfig: {
-            maxOutputTokens: o.maxTokens || CAE.config.DEFAULT_MAX_TOKENS,
-            responseMimeType: 'application/json',
-            // Gemini 2.5 Flash spends output tokens on internal "thinking" by
-            // default, which can truncate long JSON tasks mid-way. Turn it off.
-            thinkingConfig: /2\.5-flash/.test(CAE.config.GEMINI_MODEL) ? { thinkingBudget: 0 } : undefined,
-          },
-        });
-      const cand = gdata && Array.isArray(gdata.candidates) && gdata.candidates[0];
-      const gtext = cand && cand.content && Array.isArray(cand.content.parts)
-        ? cand.content.parts.map((pt) => pt.text || '').join('')
-        : '';
-      if (!gtext) throw new ApiError(MSG.badjson, 'badjson');
-      return gtext;
-    }
+    if (activeProvider() === 'gemini') return geminiCall(key, promptText, o);
 
     const data = await request(CAE.config.API_BASE, {
       'x-api-key': key,
@@ -432,6 +551,7 @@
   CAE.api = {
     hasKey,
     callModel,
+    discoverGeminiModels,
     generateSet,
     assessWriting,
     generateSpeakingPrompts,

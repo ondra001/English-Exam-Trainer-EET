@@ -41,9 +41,14 @@
     MODEL: 'claude-opus-4-8',
 
     /* Free engine: Google Gemini's free tier (aistudio.google.com). Users pick
-     * the provider in Settings; both keys stay in this browser only. */
+     * the provider in Settings; both keys stay in this browser only.
+     *
+     * NOTE: there is deliberately NO single GEMINI_MODEL here any more. Which
+     * Gemini models a key may call differs from key to key and changes as
+     * Google ships and retires models, so a hard-wired id silently breaks for
+     * whoever holds a different key — see js/models.js, which discovers and
+     * ranks the models each key can actually use. */
     GEMINI_API_BASE: 'https://generativelanguage.googleapis.com/v1beta/models/',
-    GEMINI_MODEL: 'gemini-2.5-flash',
     ANTHROPIC_VERSION: '2023-06-01',
     DEFAULT_MAX_TOKENS: 8000,
 
@@ -65,6 +70,6 @@
     SCALE_MAX: 210,
 
     APP_NAME: 'English Exam Trainer',
-    VERSION: '1.1.0',
+    VERSION: '1.2.0',
   };
 })();

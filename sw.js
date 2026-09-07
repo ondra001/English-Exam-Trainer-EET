@@ -8,12 +8,13 @@
  *   - Same-origin static assets: cache-first with background fill.
  *   - Chart.js CDN: stale-while-revalidate so the dashboard chart works
  *     offline after the first visit.
- *   - AI/API traffic (api.anthropic.com or any /api/ path) is NEVER
- *     intercepted or cached — it passes straight to the network.
+ *   - AI/API traffic (api.anthropic.com, generativelanguage.googleapis.com, or
+ *     any /api/ path) is NEVER intercepted or cached — it passes straight to
+ *     the network.
  */
 'use strict';
 
-const CACHE_NAME = 'english-exam-trainer-v1';
+const CACHE_NAME = 'english-exam-trainer-v2';
 
 const CHART_CDN_URL = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js';
 
@@ -27,6 +28,7 @@ const SHELL_ASSETS = [
   './js/util.js',
   './js/icons.js',
   './js/storage.js',
+  './js/models.js',
   './js/prompts.js',
   './js/mock.js',
   './js/api.js',
@@ -77,6 +79,9 @@ self.addEventListener('activate', (event) => {
 /** Requests that must never be intercepted or cached (AI/API traffic). */
 function isApiRequest(url) {
   if (url.hostname === 'api.anthropic.com') return true;
+  // Gemini, including the ListModels GET that discovers which models a key can
+  // use — caching that would make "Refresh model list" a no-op.
+  if (url.hostname === 'generativelanguage.googleapis.com') return true;
   if (url.origin === self.location.origin && url.pathname.startsWith('/api/')) return true;
   return false;
 }

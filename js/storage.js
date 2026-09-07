@@ -14,6 +14,7 @@
     provider: 'anthropic',    // 'anthropic' (premium) | 'gemini' (free tier)
     apiKey: '',               // Anthropic key
     geminiKey: '',            // Google Gemini key
+    geminiModel: '',          // pinned Gemini model id; '' = pick automatically (js/models.js)
     level: 'c1',              // active CEFR level pack (see js/levels.js)
     onboarded: false,         // has the first-run level picker been shown
     theme: 'auto',            // 'auto' | 'light' | 'dark'

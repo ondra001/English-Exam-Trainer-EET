@@ -75,6 +75,16 @@ The app has two interchangeable AI engines, chosen on the welcome screen or in *
 
 Each engine has its own key field; both keys stay in the browser's localStorage and are excluded from data exports. Switching engines never touches your progress data.
 
+### Which Gemini model it uses
+
+**You don't have to choose one, and you never have to wait for an app update when Google ships a new model.** On the first request the app calls Gemini's `ListModels` with your key, keeps the models that can generate text, ranks them, and uses the best one — then remembers it. Ranking is by tier first (`flash` — the free tier's most generous quota — then `pro`, then `lite`) and by version number second, so a model that did not exist when this code was written (`gemini-4-flash`, `gemini-3.9-flash`, …) is picked up automatically.
+
+This matters because **different API keys are served different model lists.** A single hard-wired model id — which is what this app used to have — works for whoever wrote it and fails with `models/… is not found for API version v1beta` for someone whose key isn't offered that model, typically a brand-new key. The symptom is that every AI feature appears broken for that one person.
+
+So a request never depends on a single id. If a model answers "no such model / not available to you", the app drops down its ranked list, refreshes the catalogue and carries on; if a model is out of free-tier quota (those quotas are counted **per model**, per day), it moves to the next one that still has budget. Whatever answered is reused next time, so the normal case is still exactly one network call.
+
+If you want a specific model, **Settings → AI engine → Gemini model** lists everything your key can use, with a **Refresh model list** button. A pinned model is tried first but still falls back, so a pin left over from a retired model can never lock you out. The details, including the per-family thinking-parameter handling (`thinkingLevel` on Gemini 3.x, `thinkingBudget` on 2.5), live in `js/models.js`.
+
 ## Deploy the backend (public / secure mode)
 
 Direct mode must **never** be shipped publicly — anyone could extract your key from the browser. For any public deployment (including Google Play), switch to **backend mode**: the key lives only on your server, and the client sends just the exercise type and parameters.
@@ -186,6 +196,7 @@ CAE EXAM PREPARATION APP/
 │   ├── config.js         # constants + API mode switch (direct/backend/mock)
 │   ├── util.js           # DOM builder, formatting, answer normalization
 │   ├── storage.js        # localStorage layer: settings, attempts, drafts, review
+│   ├── models.js         # Gemini model discovery, ranking and fallback policy
 │   ├── prompts.js        # part metadata, JSON schemas, prompt builders (UMD)
 │   ├── mock.js           # offline sample sets for demo/dev mode
 │   ├── api.js            # callModel() + generateSet/assessWriting
@@ -204,6 +215,8 @@ CAE EXAM PREPARATION APP/
 ├── backend/
 │   ├── server.js         # Express proxy example (holds the API key)
 │   └── package.json
+├── tests/
+│   └── gemini-models.test.js   # `node tests/gemini-models.test.js` — no deps, no network
 └── README.md
 ```
 
@@ -225,6 +238,8 @@ CAE EXAM PREPARATION APP/
 ## Troubleshooting
 
 **"Your API key was rejected" / 401 errors** — the key is wrong, revoked, or the account has no credit. Re-copy the key from [console.anthropic.com](https://console.anthropic.com) (API keys page), paste it in Settings, and check your credit balance under Billing. Keys start with `sk-ant-`.
+
+**"It works for you but every AI feature is broken for me" (Gemini)** — this used to happen because the app asked for one fixed model id and not every key is served that model; a new key would get `models/… is not found for API version v1beta` on every generate. The app now discovers what your key can actually use and falls back automatically, so it should fix itself. If it does not: **Settings → AI engine → Gemini**, press **Refresh model list** — the toast tells you how many models your key can use. Zero models means the key is wrong or the Generative Language API is not enabled on its Google Cloud project. If the list looks right but generating still fails, pick a model manually from the dropdown to rule out a bad default. Note that free-tier quotas are counted **per model per day**, so "it stopped working this evening" is usually quota, not breakage — the app already walks to the next model with budget left.
 
 **CORS errors calling the Anthropic API** — the app already sends the required `anthropic-dangerous-direct-browser-access: true` header, so direct browser calls work out of the box. If you still see CORS failures, a browser extension or strict privacy setting may be blocking cross-origin requests, or you are in backend mode without the backend running (check `js/config.js` and any `cae.apiMode` override in localStorage).
 
